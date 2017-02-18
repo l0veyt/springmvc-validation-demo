@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- 可以扫描controller、service、...这里让扫描controller，指定controller的包 -->
+    <context:component-scan base-package="com.xinlee.demo.controller"/>
+
+    <!-- 校验器注入到处理器适配器中 -->
+    <mvc:annotation-driven validator="validator"/>
+
+    <!-- 校验器 -->
+    <bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <!-- Hibernate校验器 -->
+        <property name="providerClass" value="org.hibernate.validator.HibernateValidator"/>
+        <!-- 指定校验使用的资源文件，在文件中配置校验错误信息，如果不指定则默认使用classpath下的ValidationMessage.properties -->
+        <property name="validationMessageSource" ref="messageSource"/>
+    </bean>
+
+    <!-- 校验错误信息配置文件 -->
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <!-- 资源文件名 -->
+        <property name="basenames">
+            <list>
+                <!--suppress SpringModelInspection -->
+                <!-- 配置单个basename或不写classpath不会读取该文件，获取到的结果也将是实体类上注释的message中的内容 -->
+                <value>classpath:CustomValidationMessages</value>
+            </list>
+        </property>
+        <!-- 如果配置fileEncodings=UTF-8会无效 -->
+        <!-- 因为属性fileEncodings是一个Properties对象 -->
+        <!-- 如果设置了会导致产生一个key="UTF-8" value=""的properties对象 -->
+        <!-- 而且在ReloadableResourceBundleMessageSource的loadProperties方法中会执行this.fileEncodings.getProperty(filename) -->
+        <!-- 而filename的值为classpath:CustomValidationMessages，fileEncodings中并没有该key所以会导致最终encode会null，最终导致乱码 -->
+        <property name="defaultEncoding" value="UTF-8"/>
+        <!-- 对资源文件内容缓存时间，单位秒 -->
+        <property name="cacheSeconds" value="120"/>
+    </bean>
+
+    <!-- Velocity自身配置 -->
+    <bean class="org.springframework.web.servlet.view.velocity.VelocityConfigurer">
+        <!-- 模板存放根目录 -->
+        <property name="resourceLoaderPath" value="/WEB-INF/view"/>
+        <property name="velocityProperties">
+            <props>
+                <!-- 输入编码 -->
+                <prop key="input.encoding">UTF-8</prop>
+                <!-- 输出编码 -->
+                <prop key="output.encoding">UTF-8</prop>
+            </props>
+        </property>
+    </bean>
+    <!-- Velocity视图解析器的配置-->
+    <bean class="org.springframework.web.servlet.view.velocity.VelocityViewResolver">
+        <!-- 后缀 -->
+        <property name="suffix" value=".vm" />
+        <!-- 解析内容以及编码 -->
+        <property name="contentType" value="text/html;charset=utf-8" />
+    </bean>
+</beans>
